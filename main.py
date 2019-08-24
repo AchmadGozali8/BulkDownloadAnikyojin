@@ -10,36 +10,43 @@ class Scrape:
     def __init__(self, url):
         self.url = url
 
-    def start_scrape(self, url_page):
+    def extract_html_content(self, url_page):
         page_res = requests.get(url_page)
         page_content = page_res.content
         soup = BeautifulSoup(page_content, features='html.parser')
 
         return soup
 
-    def download_link(self):
+    def zippyshare_download_links(self):
         print "Start scrape to get zippyshare hosting download link"
         data = {}
 
         # start scrape
-        soup = self.start_scrape(self.url)
+        soup = self.extract_html_content(self.url)
 
         # download link lists
         soup_url_lists = soup.find_all("div", "downloadcloud")
         
-        for tag in soup_url_lists:
+        total_episode = 13
+
+        list_episode_only = total_episode - len(soup_url_lists)
+
+        for tag in soup_url_lists[:list_episode_only]:
+            print tag
             title = tag.find("h2").string.strip()
             zippyshare_links = tag.find_all("a", href=re.compile("zippyshare.com"))            
+
             try:
                 data[title] = zippyshare_links[1].get("href") 
             except IndexError:
                 print "Zippyshare not found"
             except:
-                pass
+                break
+        print data
         return data
 
     @staticmethod
-    def get_zippyshare_movie_link(link):
+    def zippyshare_movie_link(link):
         print "Start scrape movie link on zippyshare hosting"
         chromium_path = "/usr/lib/chromium-browser/chromedriver"
 
@@ -56,32 +63,25 @@ class Scrape:
 
         return get_movie_link.get("href")
 
-def download(url_downlond=None):
-    print "lol"
-    download_hosting_domain = "https://www1.zippyshare.com"
+# def download(url_downlond=None):
+#     download_hosting_domain = "https://www1.zippyshare.com"
 
-    if url_downlond is None:
-        print "url not provided"
+#     if url_downlond is None:
+#         print "url not provided"
 
-    pattern = re.compile(r'^https$')
-    for title, url in url_downlond.iteritems():
-        filename = "{}.mkv".format(title)
-        link = "{}{}".format("https:", url) 
-        movie_link = "{domain}{movie}".format(domain=download_hosting_domain, movie=Scrape.get_zippyshare_movie_link(link))
-        print "Tried to download {title}".format(title=title)   
+#     pattern = re.compile(r'^https$')
 
-        with requests.get(movie_link, stream=True) as r:
-            print 'download started'
-            with open(filenme, 'wb') as f:
-                shutil.copyfileobj(r.raw, f)
+#     for title, url in url_downlond.iteritems():
+#         filename = "{}.mkv".format(title)
+#         link = "{}{}".format("https:", url) 
+#         movie_link = "{domain}{movie}".format(domain=download_hosting_domain, movie=Scrape.zippyshare_movie_link(link))
+#         print "Tried to download {title}".format(title=title)   
+
+
 def main():
-
     url = "https://anikyojin.net/overlord-subtitle-indonesia-bd/"
-
     scrape = Scrape(url)
-
-    downloads_url = scrape.download_link()
+    downloads_url = scrape.zippyshare_download_links()
     print downloads_url
-    download(downloads_url)
 
 main()
