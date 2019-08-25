@@ -46,42 +46,48 @@ class Scrape:
         return data
 
     @staticmethod
-    def zippyshare_movie_link(link):
+    def zippyshare_movie_link(link, title):
+        print "======================================================================================"
         print "Start scrape movie link on zippyshare hosting"
         chromium_path = "/usr/lib/chromium-browser/chromedriver"
 
         driver = webdriver.PhantomJS()
         driver.implicitly_wait(10)
 
-        driver.get(link)
+        driver.get("{}{}".format("https:", link))
         html = driver.page_source
 
         soup = BeautifulSoup(html, features='html.parser')
 
         get_movie_link = soup.find("a", {"id":"dlbutton"})
-        print "Scrape Done"
+        print "Scrape {} Done".format(title)
+        print "======================================================================================"
 
         return get_movie_link.get("href")
 
-# def download(url_downlond=None):
-#     download_hosting_domain = "https://www1.zippyshare.com"
 
-#     if url_downlond is None:
-#         print "url not provided"
+class SaveToLocal:
 
-#     pattern = re.compile(r'^https$')
+    @staticmethod
+    def save_as_file(links=[], filename=""):
+        download_hosting_domain = "https://www1.zippyshare.com"
 
-#     for title, url in url_downlond.iteritems():
-#         filename = "{}.mkv".format(title)
-#         link = "{}{}".format("https:", url) 
-#         movie_link = "{domain}{movie}".format(domain=download_hosting_domain, movie=Scrape.zippyshare_movie_link(link))
-#         print "Tried to download {title}".format(title=title)   
-
+        with open("{}.txt".format(filename), "wb") as f:
+           for link in links:
+               f.write("{domain}{link}".format(domain=download_hosting_domain, link=link))
+               f.write("\n")
 
 def main():
-    url = "https://anikyojin.net/overlord-subtitle-indonesia-bd/"
+    url = "https://anikyojin.net/world-god-only-know-sub-indo-bd/"
+
+    filename = url.split("/")[3] 
+
     scrape = Scrape(url)
-    downloads_url = scrape.zippyshare_download_links()
-    print downloads_url
+
+    zippyshare_links = scrape.zippyshare_download_links()
+
+    movie_links = [Scrape.zippyshare_movie_link(v, k) for k,v in zippyshare_links.iteritems()]
+
+    save_to_file = SaveToLocal.save_as_file(movie_links, filename)
 
 main()
